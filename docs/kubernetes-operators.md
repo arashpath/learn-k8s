@@ -66,9 +66,21 @@
   kubectl create -f etcd-cluster-cr.yaml
   kubectl get pods -w
   kubectl describe etcdcluster/example-etcd-cluster
-  ## Playing with etcd Cluster
-  
-
+  # Exercising etcd
+  kubectl get services --selector etcd_cluster=example-etcd-cluster
+  kubectl run --rm -i --tty etcdctl --image quay.io/coreos/etcd \
+    --restart=Never -- /bin/sh
+    # Run in Container
+    export ETCDCTL_API=3
+    export ETCDCSVC=http://example-etcd-cluster-client:2379
+    etcdctl --endpoints $ETCDCSVC put foo bar
+    etcdctl --endpoints $ETCDCSVC get foo
   ```
-  # 
+- Scaling the etcd Cluster
+  ```bash
+  # change cluster size 4
+  kubectl apply -f etcd-cluster-cr.yml
+  kubectl get pods -l etcd_cluster=example-etcd-cluster
+  kubectl delete pods $(kubectl get pods -l etcd_cluster=example-etcd-cluster | awk 'END{print $1}')
+  ```
 ## C3: Operators at the Kubernetes Interface
