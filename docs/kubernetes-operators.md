@@ -1,6 +1,8 @@
 # Kubernetes Operators
 > Automating the Container Orchestration Platform
+
 ## C1: Operators Teach Kubernetes New Tricks
+
 ## C2: Running Operators
 ### Setting Up an Operator Lab
 - Install Docker
@@ -68,8 +70,7 @@
   kubectl describe etcdcluster/example-etcd-cluster
   # Exercising etcd
   kubectl get services --selector etcd_cluster=example-etcd-cluster
-  kubectl run --rm -i --tty etcdctl --image quay.io/coreos/etcd \
-    --restart=Never -- /bin/sh
+  kubectl run --rm -i --tty etcdctl --image quay.io/coreos/etcd --restart=Never -- /bin/sh
     # Run in Container
     export ETCDCTL_API=3
     export ETCDCSVC=http://example-etcd-cluster-client:2379
@@ -82,5 +83,21 @@
   kubectl apply -f etcd-cluster-cr.yml
   kubectl get pods -l etcd_cluster=example-etcd-cluster
   kubectl delete pods $(kubectl get pods -l etcd_cluster=example-etcd-cluster | awk 'END{print $1}')
+  kubectl describe etcdcluster/example-etcd-cluster
+  kubectl delete pods $(kubectl get pods -l etcd_cluster=example-etcd-cluster | awk 'NR == 2{print $1}')
+  kubectl get events --field-selector involvedObject.name=example-etcd-cluster
+  kubectl run --rm -i --tty etcdctl --image quay.io/coreos/etcd --restart=Never -- /bin/sh
+    # run in container
+    etcdctl --endpoints http://example-etcd-cluster-client:2379 cluster-health
   ```
+- Upgrading the etcd cluster
+  ```bash
+  kubectl get pod -l etcd_cluster -o yaml | grep image: | sort | uniq
+  # change cluster ver 3.2.13
+  kubectl apply -f etcd-cluster-cr.yml
+  kubectl describe etcd example-etcd-cluster | grep "Version:"
+  kubectl get events --field-selector involvedObject.name=example-etcd-cluster
+  kubectl patch etcdcluster example-etcd-cluster --type='json' -p '[{"op": "replace", "path": "/spec/version", "value":3.3.12}]'
+  ```
+
 ## C3: Operators at the Kubernetes Interface
