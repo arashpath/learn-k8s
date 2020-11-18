@@ -2,7 +2,13 @@
 > Automating the Container Orchestration Platform
 
 ## C1: Operators Teach Kubernetes New Tricks
-
+```bash
+kubectl run --image=nginx staticweb
+kubectl scale deployment staticweb --replicas=3
+kubectl get pods
+anyPod=$(kubectl get pods -l run=staticweb | awk 'END{print$1}')
+kubectl delete pod $anyPod
+```
 ## C2: Running Operators
 ### Setting Up an Operator Lab
 - Install Docker
@@ -101,3 +107,33 @@
   ```
 
 ## C3: Operators at the Kubernetes Interface
+### Standard Scaling: The ReplicaSet Resource
+- `ReplicaSet` is a collection of API objects.
+   - key pices: `Selector`, `Replicas` and `Pod Template` fields
+```bash
+#kubectl create deployment --image=nginx staticweb
+kubectl run --image=nginx staticweb
+kubectl describe rs -l run=staticweb
+```
+- Actions the ReplicaSet controller takes are intentionally general and application agnostic.
+- An Operator is the application-specific combination of CRs and a custom controller that does know all the details about starting, scaling, recovering, and managing its application. 
+### Custom Resources
+- An extention of the kubernetes API to represent new collections of objects in the API.
+### Custom Controller
+- CR are entries in the kubernetes API Database, CR alone is merely a collection of data. to provide a declarative API for a specific application running on a cluster, yum also need active code that captures the processes of managing that application.
+- To make an Operator, providing an API for the active management of an application,  We build an instance of the Controller pattern to control your application. 
+- This custom controller checks and maintains the application’s desired state, represented in the CR. Every Operator has one or more custom controllers implementing its application-specific management logic.
+### Operator Scopes
+- A namespace is the boundary for cluster object and resource name.
+  - Names must be unique within a single namespace
+  - Resource limits and access controls can be applied per namespace.
+- A Operator, in turn, can be limited to a namespace, or it can maintain its operand across an entire cluster.
+- **Namespace Scope**: 
+  - sensible and more flexible for clusters used by multiple teams.
+  - can be upgraded independently of other instances.
+- **Cluster-Scoped Operators** :
+  - In some situations it is desirable for an Operator to watch and manage an application or services throughout a cluster. e.g. `Isto` operator that manages a sercvice mesh or `cert-manager` that issues TLS certificates for application endpoints.
+  - To run operator in cluster-Scope
+    - it should watch all namespaces
+    - run under the auspices of a `ClusterRole` and `ClusterRoleBinding` rather than namespaced `Role` and `RoleBinding` authorization objects.
+### Authorization
