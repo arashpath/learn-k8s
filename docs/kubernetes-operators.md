@@ -9,6 +9,7 @@ kubectl get pods
 anyPod=$(kubectl get pods -l run=staticweb | awk 'END{print$1}')
 kubectl delete pod $anyPod
 ```
+
 ## C2: Running Operators
 ### Setting Up an Operator Lab
 - Install Docker
@@ -88,10 +89,12 @@ kubectl delete pod $anyPod
   # change cluster size 4
   kubectl apply -f etcd-cluster-cr.yml
   kubectl get pods -l etcd_cluster=example-etcd-cluster
-  kubectl delete pods $(kubectl get pods -l etcd_cluster=example-etcd-cluster | awk 'END{print $1}')
+  # delete any on pod
+  anyPod=$(kubectl get pods -l etcd_cluster=example-etcd-cluster | awk 'NR == 2{print $1}')
+  kubectl delete pods $anyPod
   kubectl describe etcdcluster/example-etcd-cluster
-  kubectl delete pods $(kubectl get pods -l etcd_cluster=example-etcd-cluster | awk 'NR == 2{print $1}')
   kubectl get events --field-selector involvedObject.name=example-etcd-cluster
+  # check pod health
   kubectl run --rm -i --tty etcdctl --image quay.io/coreos/etcd --restart=Never -- /bin/sh
     # run in container
     etcdctl --endpoints http://example-etcd-cluster-client:2379 cluster-health
@@ -137,3 +140,82 @@ kubectl describe rs -l run=staticweb
     - it should watch all namespaces
     - run under the auspices of a `ClusterRole` and `ClusterRoleBinding` rather than namespaced `Role` and `RoleBinding` authorization objects.
 ### Authorization
+> Authorization: the power to do things on the cluster through the API, is defined in kubernetes by one of a few available access control systems. **Role-Based Access Control (RBAC)** 
+- **Service Accounts:** are managed by Kubernetes and can be created and manipulated through the Kubernetes API, is used to authorizing programs insted of people.
+- **Roles:**
+  - Kubernetes RBAC denies permission by default, so a role defines granted rights
+    ```yaml
+    apiVersion: rbac.authorization.k8s.io/v1
+    kind: Role
+    metadata:
+      namespace: default
+      name: pod-reader
+    rules:
+    - apiGroups: [""]
+      resources: ["pods"]
+      verbs: ["get","watch","list"]
+    ```
+- **RoleBindings:**
+  - ties a role to a list of one or more users. 
+  - can referrence only those roles in its own namespace.
+
+- **ClusterRoles and ClusterRoleBindings**: 
+  - `Roles` and `RoleBindings` are restricted to a namespace.
+  - `ClusterRoles` and `ClusterRoleBindings` are their cluster-wide equivalents.
+  - `RoleBindings` when refring a `ClusterRole`,  rules are apply to only those specified resources in the binding's own namespace.
+  - a set of common roles can be defined once as `ClusterRoles`, but reused and granted to users in just a given namespace.
+  - `ClusterRoleBinding` grants capabilites to a user across the entire cluster. in all namespaces.
+  - Operators charged with cluster-wide responsibilites will often tie a `ClusterRole` to an Operator service account with a `ClusterRoleBinding`.
+
+## C4: The Operator Framework
+- The Red Hat Operator Framwork make it simpler to create and distrubute Operators.
+  - SDK: software development kit to build operators
+  - OLM: Operator Lifecycle Manager is an operator that installs, manages, and upgrades other Operators.
+  - Operator Metering is a metrics system that accounts for Operators use of cluster resource.
+### Operator Framework Origins
+- `operator-sdk` builds atop the Kubernets `controller-runtime`, a set of libraries providing essential Kubernetes controller routines in the Go programming language provides integration points for distributing and managing Operators with OLM, and measuring them with Operator Metering.
+### Operator Maturity Model
+- **Phase I** ( Go | Andible | Helm )
+  > **Basic Install:** Automated application provisioning and configuration management. 
+- **Phase II** ( Go | Andible | Helm )
+  > **Seamless Upgrades:** Pach and minor version upgrades supported
+- **Phase III** ( Go | Ansible )
+  > **Full Lifecycle:** App lifecycle storage lifecycle (backup,failure,recovery)
+- **Phase IV** ( Go | Ansible )
+  > **Deep Insights:** Metrics, alerts, log processing and workload analysis
+- **Phase V** ( Go | Ansible )
+  > **Auto Pilot:** Horizontal/Vertical scalling, auto config tuning, abnormal detection, schedule tuning
+### Operator SDK
+> set of tools for scaffolding, building, and preparing an Operator for deployment. `Go` languange, adapter architecture for `Helm` charts or `Ansible` playbooks.
+- Binary Installation
+  ```bash
+  RELEASE_VERSION=v1.2.0
+  for operator in operator-sdk ansible-operator helm-operator 
+  do
+    curl -LO https://github.com/operator-framework/operator-sdk/releases/download/${RELEASE_VERSION}/${operator}-${RELEASE_VERSION}-x86_64-linux-gnu
+    gpg --verify ${operator}-${RELEASE_VERSION}-x86_64-linux-gnu.asc
+    chmod +x ${operator}-${RELEASE_VERSION}-x86_64-linux-gnu
+    #sudo cp ${operator}-${RELEASE_VERSION}-x86_64-linux-gnu /usr/local/bin/${operator}
+    ln -s ${operator}-${RELEASE_VERSION}-x86_64-linux-gnu ${operator}
+  done
+  ```
+### Operator Lifecycle Manager
+- OLM defines a schema for Operator metadata - Cluster Service Version (CSV), for describing an Operator and its dependencies.
+- Operators with a CSV can be listed as entries in a *catalog* available ot OLM running on a Kubenetes cluster.
+- User then *subscribe* to an Operator fromt the catalog to tell OLM to provision ant manage a desired Operator.
+- That Operator in turn, provisions and manages its application or service on the cluster.
+### Operator Metering
+> A system for analyzing the resource usage of the Operators running on Kubernetes clusters. 
+- *Budgeting* 
+- *Billing*
+- *Metrics aggregation*
+
+## C4: Sample Application: Visitors Site
+### Application Overview
+### Installation with Manifests
+#### Deploying MySQL
+#### Backend
+#### Frontend
+### Deploying the Manifests
+### Accessing the Visitors Site
+### Cleaning Up
