@@ -210,12 +210,17 @@ kubectl describe rs -l run=staticweb
 - *Billing*
 - *Metrics aggregation*
 
-## C4: Sample Application: Visitors Site
-### Application Overview
-### Installation with Manifests
-#### Deploying MySQL
-#### Backend
-#### Frontend
-### Deploying the Manifests
-### Accessing the Visitors Site
-### Cleaning Up
+## C5: Sample Application: Visitors Site
+- Application Overview
+  - A web frontend, implemented in `React`
+  - A REST API, implemented in `Python` using `the Django framework`
+  - A database, using `MySQL`
+- Installation with Manifests
+  - `Deployment`: Contains the information needed to create the containers, including the image name, exposed ports, and specific configuration for a single deployment.
+  - `Service`: A network abstraction across all containers in a deployment. If a deployment is scaled up beyond one container, which we will do with the backend, the service sits in front and balances incoming requests across all of the replicas.
+- Deploying the Manifests
+  ```bash
+  kubectl apply -f ch05/database.yml #MySQL
+  kubectl apply -f ch05/backend.yml  #Backend
+  kubectl apply -f ch05/frontend.yml #Fronend
+  ```
