@@ -102,6 +102,7 @@ kubectl delete pod $anyPod
 - Upgrading the etcd cluster
   ```bash
   kubectl get pod -l etcd_cluster -o yaml | grep image: | sort | uniq
+  kubectl get pods -o jsonpath="{..image}" | tr -s '[[:space:]]' '\n' | sort | uniq
   # change cluster ver 3.2.13
   kubectl apply -f etcd-cluster-cr.yml
   kubectl describe etcd example-etcd-cluster | grep "Version:"
@@ -224,3 +225,16 @@ kubectl describe rs -l run=staticweb
   kubectl apply -f ch05/backend.yml  #Backend
   kubectl apply -f ch05/frontend.yml #Fronend
   ```
+
+## C6: Adapter Operators
+### Helm Operator
+Building the Operator
+Fleshing Out the CRD
+Reviewing Operator Permissions
+Running the Helm Operator
+### Ansible Operator
+Building the Operator
+Fleshing Out the CRD
+Reviewing Operator Permissions
+Running the Ansible Operator
+### Testing an Operator
