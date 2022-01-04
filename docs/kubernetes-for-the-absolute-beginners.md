@@ -1,4 +1,5 @@
 # Kubernetes for the Absolute Beginners
+> [Repo:k8s4absbegin](/k8s4absbegin)
 ## 1. Introduction
 ## 2. Kubernetes Overview
 - Containers Overview
@@ -20,21 +21,89 @@
   - Kubeadm 
   - GKE
   - https://labs.play-with-k8s.com/
-- Demo - play-with-k8s.com 
 ## 4. Kubernetes Concepts
   - pods
-5. YAML Introduction/1. Introduction to YAML 
-5. YAML Introduction/2. Introduction to Coding Exercises 
-6. Kubernetes Concepts - PODs, ReplicaSets, Deployments/1. PODs with YAML 
-6. Kubernetes Concepts - PODs, ReplicaSets, Deployments/2. Tips & Tricks - YAML 
-6. Kubernetes Concepts - PODs, ReplicaSets, Deployments/12. Replication Controllers and ReplicaSets 
-6. Kubernetes Concepts - PODs, ReplicaSets, Deployments/13. Demo - ReplicaSets 
-6. Kubernetes Concepts - PODs, ReplicaSets, Deployments/21. Deployments 
-6. Kubernetes Concepts - PODs, ReplicaSets, Deployments/22. Demo - Deployments 
-6. Kubernetes Concepts - PODs, ReplicaSets, Deployments/30. Deployments - Update and Rollback 
-6. Kubernetes Concepts - PODs, ReplicaSets, Deployments/31. Demo - Deployments - Update and Rollback 
-7. Networking in Kubernetes/1. Basics of Networking in Kubernetes 
-7. Networking in Kubernetes/2. Demo - Networking in Kubernetes 
+    ```sh
+    kubectl run nginx --image=nginx
+    kubectl get pods
+    kubectl describe pods
+    kubectl get pods -o wide
+    ```
+## 5. YAML Introduction
+## 6. Kubernetes Concepts - PODs, ReplicaSets, Deployments
+- PODs with YAML 
+  ```bash
+  kubectl create -f c6_pod-definition-k8s.yml
+  kubectl get pods
+  kubectl describe pod myapp-pod 
+  ```
+  ```yaml
+  apiVersion: v1     # string value
+  kind: Pod          # string value
+  metadata:          # dict value
+    name: myapp-pod
+    labels:
+      app: myapp
+      type: front-end
+  spec:              # diffrent every kind          
+    containers:
+      - name: nginx-container
+        image: nginx
+  ```
+- Replication Controllers and ReplicaSets 
+  - Replication Controllers
+  ```bash
+  kubectl get replicationcontroller
+  kubectl get pods
+  ```
+  ```yaml
+  apiVersion: v1
+  kind: ReplicationController
+  metadata:
+    name: myapp-rc
+    labels:
+      app: myapp
+      type: front-end
+  spec:
+    replicas: 3
+    template:
+      # contents from pod definition
+  ```
+  - Replica Sets
+  ```bash
+  kubectl get replicaset
+  # Scale
+  kubectl replace -f c6_replicaset-definition.yml
+  kubectl scale --replicas=6 -f c6_replicaset-definition.yml
+  kubectl scale --replicas=6 -f replicaset myapp-replicaset
+  ```
+  ```yaml
+  apiVersion: apps/v1
+  kind: ReplicaSet
+  metadata:
+    name:
+    labels:
+  spec:
+    replicas:
+    selector:
+    template:
+  ```
+- Deployments
+  ```bash
+  kubectl get deployment
+  ```
+- Deployments - Update and Rollback 
+  ```bash
+  kubectl create -f c6_deployment-definition-k8s.yml
+  kubectl get deployments
+  kubectl apply -f c6_deployment-definition-k8s.yml
+  kubectl set image deployment/myapp-deployment nginx=nginx:latest
+  kubectl rollout status deploymet/myapp-deployment
+  kubectl rollout undo deploymet/myapp-deployment
+  # --record=true
+  ```
+## 7. Networking in Kubernetes
+- Basics of Networking in Kubernetes 
 8. Services/1. Services - NodePort 
 8. Services/2. Demo - Services 
 8. Services/3. Services - ClusterIP 
